@@ -1,0 +1,152 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Coupon;
+use Illuminate\Http\Request;
+
+class CouponController extends Controller
+{
+    public function index()
+    {
+        // Database data fetching
+      $result['data']= Coupon::all();
+
+
+        return view ('coupon', $result);
+    }
+
+   
+    public function manage_coupon(Request $request, $id='')
+    {
+        if($id>0)
+        {
+            $arr=Coupon::where(['id'=>$id])->get();
+
+            $result['title']=$arr['0']->title;
+            $result['code']=$arr['0']->code;
+            $result['value']=$arr['0']->value;
+            $result['type']=$arr['0']->type;
+            $result['min_order_amt']=$arr['0']->min_order_amt;
+            $result['is_one_time']=$arr['0']->is_one_time;
+
+
+
+
+            $result['id']=$arr['0']->id;
+
+
+        }
+        else{
+
+            $result['title']='';
+            
+            $result['code']='';
+
+            $result['value']='';
+
+            $result['type']='';
+            $result['min_order_amt']='';
+            $result['is_one_time']='';
+
+
+
+            $result['id']='0';
+
+
+
+        }
+
+       
+
+        return view ('manage_coupon',$result );
+
+    }
+// post data 
+
+    public function manage_coupon_process(Request $request)
+
+
+    {
+        // return $request->post();
+
+         $request-> validate ([
+            'title'=>'required',
+
+            // at What time ingore validation category_slug term
+            'code'=>'required|unique:coupons,code,' . $request->post('id'),
+         ]);
+
+         $model=new Coupon();
+         if ($request->post('id')>0){
+
+            $model= Coupon::find($request->post('id'));
+            $msg="Coupon Updated";
+
+
+         }else{
+            $model= new Coupon();
+            $msg="Coupon Inserted";
+          $model->status=1;
+
+         }
+
+         $model->title=$request->post('title');
+         $model->code=$request->post('code');
+         $model->value=$request->post('value');
+         $model->type=$request->post('type');
+         $model->min_order_amt=$request->post('min_order_amt');
+         $model->is_one_time=$request->post('is_one_time');
+
+
+
+
+         
+         $model->save();
+
+        $request->session()->flash('message',$msg);
+        return redirect('coupon');  
+
+
+    } 
+
+    /**
+     * Store a newly created resource in storage.manage_category_process
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     * 
+     * 
+     */
+
+    //  Foe delete function 
+    public function delete(Request $request,$id)
+    {
+       $model=Coupon::find($id);
+        $model->delete();
+
+        $request->session()->flash('message','Coupon Deleted ' );
+        return redirect('coupon');  
+
+
+    }
+
+    public function status(Request $request,$status,$id)
+    {
+       $model=Coupon::find($id);
+       $model->status=$status;
+       $model->save();
+
+         $request->session()->flash('message','Coupon status updated ' );
+         return redirect('coupon');  
+
+
+
+
+
+    }
+
+
+
+
+}
